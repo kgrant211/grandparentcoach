@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "Grandparent Coach",
+    "slug": "grantparent-coach",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.grandparentcoach.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.grandparentcoach.app"
+    },
+    "web": {
+      "favicon": "./assets/icon.png"
+    },
+    "scheme": "grandparentcoach",
+    "plugins": [
+      "expo-router"
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "2b418d62-e21d-4dab-a5b7-7701c9eecbd3"
+      }
+    },
+    "owner": "kgrant211"
+  }
+}
