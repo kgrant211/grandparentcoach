@@ -18,17 +18,32 @@
     },
     "android": {
       "package": "com.grandparentcoach.app",
-      "permissions": ["com.android.vending.BILLING"]
+      "permissions": [
+        "com.android.vending.BILLING"
+      ]
     },
     "web": {},
     "scheme": "grandparentcoach",
     "plugins": [
       "expo-router",
-      "expo-dev-client"
+      "expo-dev-client",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "gradleVersion": "8.6",
+            "androidGradlePluginVersion": "8.3.2",
+            "kotlinVersion": "1.9.24"
+          }
+        }
+      ]
     ],
     "extra": {
       "router": {
         "origin": false
+      },
+      "eas": {
+        "projectId": "3fa78369-d920-4bf2-8ad1-99fd649bce77"
       }
     },
     "owner": "kgrant211"
