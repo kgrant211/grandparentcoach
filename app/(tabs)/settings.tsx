@@ -1,36 +1,15 @@
-import React, { useState } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Switch,
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../../lib/theme';
-import { useAuth } from '../../state/useAuth';
-import { Header } from '../../components/Header';
-import { LargeButton } from '../../components/LargeButton';
-import { FontScaler } from '../../components/FontScaler';
 
 export default function SettingsScreen() {
-  const { theme, isHighContrast, fontSizeScale, toggleHighContrast, setFontSizeScale } = useTheme();
-  const { user, profile, isPro, signOut } = useAuth();
-  const [showFontScaler, setShowFontScaler] = useState(false);
-
-  const handleSignOut = () => {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Sign Out', style: 'destructive', onPress: signOut },
-      ]
-    );
-  };
-
   const handleUpgrade = () => {
     Alert.alert(
       'Upgrade to Pro',
@@ -38,7 +17,6 @@ export default function SettingsScreen() {
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Upgrade', onPress: () => {
-          // TODO: Implement RevenueCat upgrade flow
           Alert.alert('Coming Soon', 'Upgrade functionality will be available soon!');
         }},
       ]
@@ -52,7 +30,6 @@ export default function SettingsScreen() {
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Restore', onPress: () => {
-          // TODO: Implement RevenueCat restore flow
           Alert.alert('Restore', 'Purchase restoration will be available soon!');
         }},
       ]
@@ -66,7 +43,6 @@ export default function SettingsScreen() {
       [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Export', onPress: () => {
-          // TODO: Implement data export
           Alert.alert('Export', 'Data export will be available soon!');
         }},
       ]
@@ -86,13 +62,13 @@ export default function SettingsScreen() {
     );
   };
 
-  const SettingItem = ({ 
-    icon, 
-    title, 
-    subtitle, 
-    onPress, 
+  const SettingItem = ({
+    icon,
+    title,
+    subtitle,
+    onPress,
     rightComponent,
-    showArrow = true 
+    showArrow = true
   }: {
     icon: keyof typeof Ionicons.glyphMap;
     title: string;
@@ -102,95 +78,57 @@ export default function SettingsScreen() {
     showArrow?: boolean;
   }) => (
     <TouchableOpacity
-      style={[styles.settingItem, { 
-        backgroundColor: theme.colors.surface,
-        borderColor: theme.colors.border,
-      }]}
+      style={styles.settingItem}
       onPress={onPress}
       disabled={!onPress}
     >
       <View style={styles.settingLeft}>
-        <View style={[styles.iconContainer, { backgroundColor: theme.colors.primary }]}>
-          <Ionicons name={icon} size={20} color={theme.colors.background} />
+        <View style={styles.iconContainer}>
+          <Ionicons name={icon} size={20} color="#ffffff" />
         </View>
         <View style={styles.settingText}>
-          <Text style={[styles.settingTitle, {
-            color: theme.colors.text,
-            fontSize: theme.fonts.sizes.lg,
-          }]}>
-            {title}
-          </Text>
+          <Text style={styles.settingTitle}>{title}</Text>
           {subtitle && (
-            <Text style={[styles.settingSubtitle, {
-              color: theme.colors.textSecondary,
-              fontSize: theme.fonts.sizes.sm,
-            }]}>
-              {subtitle}
-            </Text>
+            <Text style={styles.settingSubtitle}>{subtitle}</Text>
           )}
         </View>
       </View>
-      
+
       <View style={styles.settingRight}>
         {rightComponent || (showArrow && onPress && (
-          <Ionicons 
-            name="chevron-forward" 
-            size={20} 
-            color={theme.colors.textSecondary} 
-          />
+          <Ionicons name="chevron-forward" size={20} color="#666666" />
         ))}
       </View>
     </TouchableOpacity>
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <Header title="Settings" />
-      
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Settings</Text>
+      </View>
+
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Account Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, {
-            color: theme.colors.text,
-            fontSize: theme.fonts.sizes.lg,
-          }]}>
-            Account
-          </Text>
-          
+          <Text style={styles.sectionTitle}>Account</Text>
+
           <SettingItem
             icon="person"
-            title={profile?.display_name || 'Guest User'}
-            subtitle={profile?.email || 'Not signed in'}
+            title="Guest User"
+            subtitle="Not signed in"
             onPress={() => {
-              if (!user) {
-                Alert.alert('Sign In', 'Please sign in to manage your account.');
-              }
+              Alert.alert('Sign In', 'Sign-in will be available soon.');
             }}
           />
-          
-          {isPro ? (
-            <SettingItem
-              icon="star"
-              title="Pro Subscription"
-              subtitle="Active"
-              rightComponent={
-                <View style={[styles.proBadge, { backgroundColor: theme.colors.accent }]}>
-                  <Text style={[styles.proBadgeText, { color: theme.colors.background }]}>
-                    PRO
-                  </Text>
-                </View>
-              }
-              showArrow={false}
-            />
-          ) : (
-            <SettingItem
-              icon="star-outline"
-              title="Upgrade to Pro"
-              subtitle="Unlock all features"
-              onPress={handleUpgrade}
-            />
-          )}
-          
+
+          <SettingItem
+            icon="star-outline"
+            title="Upgrade to Pro"
+            subtitle="Unlock all features"
+            onPress={handleUpgrade}
+          />
+
           <SettingItem
             icon="refresh"
             title="Restore Purchases"
@@ -199,61 +137,17 @@ export default function SettingsScreen() {
           />
         </View>
 
-        {/* Accessibility Section */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, {
-            color: theme.colors.text,
-            fontSize: theme.fonts.sizes.lg,
-          }]}>
-            Accessibility
-          </Text>
-          
-          <SettingItem
-            icon="text"
-            title="Text Size"
-            subtitle={`Current: ${fontSizeScale.toFixed(1)}x`}
-            onPress={() => setShowFontScaler(!showFontScaler)}
-          />
-          
-          {showFontScaler && (
-            <FontScaler
-              onFontSizeChange={setFontSizeScale}
-              currentScale={fontSizeScale}
-            />
-          )}
-          
-          <SettingItem
-            icon="contrast"
-            title="High Contrast"
-            subtitle={isHighContrast ? 'Enabled' : 'Disabled'}
-            rightComponent={
-              <Switch
-                value={isHighContrast}
-                onValueChange={toggleHighContrast}
-                trackColor={{ false: theme.colors.border, true: theme.colors.primary }}
-                thumbColor={theme.colors.background}
-              />
-            }
-            showArrow={false}
-          />
-        </View>
-
         {/* Data & Privacy Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, {
-            color: theme.colors.text,
-            fontSize: theme.fonts.sizes.lg,
-          }]}>
-            Data & Privacy
-          </Text>
-          
+          <Text style={styles.sectionTitle}>Data & Privacy</Text>
+
           <SettingItem
             icon="download"
             title="Export My Data"
             subtitle="Download your conversations and favorites"
             onPress={handleExportData}
           />
-          
+
           <SettingItem
             icon="trash"
             title="Delete All Data"
@@ -264,27 +158,22 @@ export default function SettingsScreen() {
 
         {/* Legal Section */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, {
-            color: theme.colors.text,
-            fontSize: theme.fonts.sizes.lg,
-          }]}>
-            Legal
-          </Text>
-          
+          <Text style={styles.sectionTitle}>Legal</Text>
+
           <SettingItem
             icon="document-text"
             title="Privacy Policy"
             subtitle="How we protect your data"
             onPress={() => Alert.alert('Privacy Policy', 'Privacy policy will be available soon!')}
           />
-          
+
           <SettingItem
             icon="shield-checkmark"
             title="Terms of Service"
             subtitle="App usage terms and conditions"
             onPress={() => Alert.alert('Terms of Service', 'Terms of service will be available soon!')}
           />
-          
+
           <SettingItem
             icon="medical"
             title="Safety & Medical Disclaimer"
@@ -296,27 +185,9 @@ export default function SettingsScreen() {
           />
         </View>
 
-        {/* Sign Out */}
-        {user && (
-          <View style={styles.signOutSection}>
-            <LargeButton
-              title="Sign Out"
-              onPress={handleSignOut}
-              variant="outline"
-              icon="log-out"
-              fullWidth
-            />
-          </View>
-        )}
-
         {/* App Version */}
         <View style={styles.versionSection}>
-          <Text style={[styles.versionText, {
-            color: theme.colors.textSecondary,
-            fontSize: theme.fonts.sizes.sm,
-          }]}>
-            Version 1.0.0
-          </Text>
+          <Text style={styles.versionText}>Version 1.0.0</Text>
         </View>
       </ScrollView>
     </View>
@@ -326,6 +197,19 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#ffffff',
+  },
+  header: {
+    padding: 20,
+    paddingTop: 60,
+    backgroundColor: '#f8f9fa',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#333333',
   },
   content: {
     flex: 1,
@@ -335,10 +219,11 @@ const styles = StyleSheet.create({
     marginVertical: 24,
   },
   sectionTitle: {
-    fontFamily: 'System',
+    fontSize: 18,
     fontWeight: '600',
     marginBottom: 16,
     marginLeft: 8,
+    color: '#333333',
   },
   settingItem: {
     flexDirection: 'row',
@@ -346,7 +231,9 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
+    borderColor: '#e9ecef',
     marginBottom: 8,
+    backgroundColor: '#ffffff',
   },
   settingLeft: {
     flexDirection: 'row',
@@ -360,39 +247,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 16,
+    backgroundColor: '#007AFF',
   },
   settingText: {
     flex: 1,
   },
   settingTitle: {
-    fontFamily: 'System',
+    fontSize: 16,
     fontWeight: '500',
     marginBottom: 2,
+    color: '#333333',
   },
   settingSubtitle: {
-    fontFamily: 'System',
+    fontSize: 14,
+    color: '#666666',
   },
   settingRight: {
     marginLeft: 8,
-  },
-  proBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-  },
-  proBadgeText: {
-    fontFamily: 'System',
-    fontWeight: '600',
-    fontSize: 14,
-  },
-  signOutSection: {
-    marginVertical: 32,
   },
   versionSection: {
     alignItems: 'center',
     paddingVertical: 24,
   },
   versionText: {
-    fontFamily: 'System',
+    fontSize: 14,
+    color: '#999999',
   },
 });

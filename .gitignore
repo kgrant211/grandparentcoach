@@ -1,0 +1,33 @@
+# Node
+node_modules/
+.npmrc
+npm-debug.log*
+
+# Expo/React Native
+.expo/
+.expo-shared/
+web-build/
+*.expo*
+
+# Platform builds (managed workflow)
+ios/
+android/
+
+# Env & local configs
+.env
+.env.*
+!.env.example
+*.local
+
+# Editors/OS
+.DS_Store
+.vscode/
+.idea/
+*.swp
+
+# Tests/coverage
+coverage/
+
+# Misc caches
+.cache/
+.tmp/

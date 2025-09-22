@@ -1,3 +1,17 @@
+Local coach proxy
+
+Env vars:
+- OPENAI_API_KEY
+- OPENAI_BASE_URL (optional; defaults to https://api.openai.com/v1)
+- MODEL (optional; defaults to gpt-4o-mini)
+
+Run:
+node server/index.js
+
+Endpoints:
+POST /coach { messages:[{role,content}], context:{topic,ageRange} }
+→ { content }
+
 # Server API Documentation
 
 This directory contains the client-side API code for communicating with the backend server.

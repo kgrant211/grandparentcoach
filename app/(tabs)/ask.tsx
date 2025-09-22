@@ -1,200 +1,262 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
+  TouchableOpacity,
+  TextInput,
   FlatList,
   Alert,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
-import { useTheme } from '../../lib/theme';
-import { useSessionStore } from '../../state/useSessionStore';
-import { Header } from '../../components/Header';
-import { CoachMessage } from '../../components/CoachMessage';
-import { UserMessage } from '../../components/UserMessage';
-import { InputBar } from '../../components/InputBar';
+import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams } from 'expo-router';
+import { askCoachAPI } from '../../server/api';
 
 export default function AskScreen() {
-  const { theme } = useTheme();
-  const {
-    currentSession,
-    messages,
-    sendMessage,
-    addToFavorites,
-    generateSummary,
-    isPro,
-    isLoading,
-  } = useSessionStore();
+  const params = useLocalSearchParams();
+  const topic = typeof params.topic === 'string' ? params.topic : undefined;
 
-  const [isTyping, setIsTyping] = useState(false);
-
-  useEffect(() => {
-    if (currentSession && messages.length === 0) {
-      // Send initial greeting
-      const greeting = "Hi! I'm here to help you with your grandparenting questions. What's going on with your grandchild today?";
-      sendMessage(greeting);
+  const [messages, setMessages] = useState([
+    {
+      id: '1',
+      role: 'assistant',
+      content: 'Hi! I\'m here to help you with your grandparenting questions. What\'s going on with your grandchild today?',
+      timestamp: new Date().toLocaleTimeString(),
     }
-  }, [currentSession, messages.length, sendMessage]);
+  ]);
+
+  const [draft, setDraft] = useState('');
 
   const handleSendMessage = async (content: string) => {
     if (!content.trim()) return;
 
-    setIsTyping(true);
+    // Add user message
+    const newMessage = {
+      id: Date.now().toString(),
+      role: 'user' as const,
+      content,
+      timestamp: new Date().toLocaleTimeString(),
+    };
+
+    setMessages(prev => [...prev, newMessage]);
+
     try {
-      await sendMessage(content);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to send message. Please try again.');
-    } finally {
-      setIsTyping(false);
+      const { content: coach } = await askCoachAPI({
+        context: { topic },
+        messages: [...messages, newMessage].map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+      });
+      const coachResponse = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant' as const,
+        content: coach || 'Thanks for sharing. Could you tell me a bit more about the situation?',
+        timestamp: new Date().toLocaleTimeString(),
+      };
+      setMessages(prev => [...prev, coachResponse]);
+    } catch (e) {
+      Alert.alert('Network error', 'Unable to reach the coach. Please try again.');
     }
   };
 
-  const handleSaveToFavorites = async () => {
-    if (!currentSession) return;
-
-    try {
-      const title = `Advice from ${new Date().toLocaleDateString()}`;
-      await addToFavorites(title);
-      Alert.alert('Saved!', 'This advice has been saved to your favorites.');
-    } catch (error) {
-      Alert.alert('Error', 'Failed to save to favorites. Please try again.');
-    }
-  };
-
-  const handleGenerateSummary = async () => {
-    if (!currentSession) return;
-
-    try {
-      const summary = await generateSummary(currentSession.id);
-      if (summary) {
-        Alert.alert('Summary Generated', summary);
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to generate summary. Please try again.');
-    }
-  };
+  // Seed tailored clarifying questions for popular topics on first render
+  React.useEffect(() => {
+    if (!topic) return;
+    setMessages(prev => {
+      if (prev.length > 1) return prev;
+      const friendly = (t: string) => {
+        switch (t) {
+          case 'tantrums':
+            return "Let\'s get the full picture about tantrums. How old is the child? When do the tantrums tend to happen? What do you usually try in the moment? Anything stressful going on today?";
+          case 'mealtime':
+            return "Quick mealtime check-in: How old is the child? What\'s hard about meals—refusal, leaving the table, specific foods? What\'s helped even a little? Any allergies or family rules I should follow?";
+          case 'bedtime':
+            return "Bedtime context helps: How old is the child? What\'s the routine now and where does it get tough? Do they nap, and how was today? What\'s worked before, even a little?";
+          case 'screen_time':
+            return "For screens, I\'d love context: How old is the child? What devices and when are they used? What limits are already in place? What sparks pushback?";
+          default:
+            return undefined;
+        }
+      };
+      const prompt = friendly(topic);
+      if (!prompt) return prev;
+      const tailored = {
+        id: Date.now().toString(),
+        role: 'assistant' as const,
+        content: prompt,
+        timestamp: new Date().toLocaleTimeString(),
+      };
+      return [...prev, tailored];
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [topic]);
 
   const renderMessage = ({ item }: { item: any }) => {
     if (item.role === 'user') {
       return (
-        <UserMessage
-          content={item.content}
-          timestamp={new Date(item.created_at).toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
-        />
+        <View style={styles.userMessage}>
+          <Text style={styles.userMessageText}>{item.content}</Text>
+          <Text style={styles.timestamp}>{item.timestamp}</Text>
+        </View>
       );
     } else if (item.role === 'assistant') {
       return (
-        <CoachMessage
-          content={item.content}
-          timestamp={new Date(item.created_at).toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
-          onSaveToFavorites={handleSaveToFavorites}
-          onGenerateSummary={handleGenerateSummary}
-          isPro={isPro}
-        />
+        <View style={styles.coachMessage}>
+          <Text style={styles.coachMessageText}>{item.content}</Text>
+          <Text style={styles.timestamp}>{item.timestamp}</Text>
+        </View>
       );
     }
     return null;
   };
 
-  if (!currentSession) {
-    return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-        <Header title="Ask Your Coach" />
-        <View style={styles.emptyState}>
-          <Text style={[styles.emptyText, {
-            color: theme.colors.textSecondary,
-            fontSize: theme.fonts.sizes.lg,
-          }]}>
-            No active session. Start a new conversation from the Home tab.
-          </Text>
-        </View>
-      </View>
-    );
-  }
+  // Auto scroll to bottom
+  const listRef = React.useRef<FlatList<any>>(null);
+  React.useEffect(() => {
+    requestAnimationFrame(() => {
+      listRef.current?.scrollToEnd({ animated: true });
+    });
+  }, [messages.length]);
 
   return (
-    <KeyboardAvoidingView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <Header title="Ask Your Coach" />
-      
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Ask Your Coach</Text>
+      </View>
+
       <FlatList
+        ref={listRef}
         data={messages}
-        renderItem={renderMessage}
         keyExtractor={(item) => item.id}
-        style={styles.messagesList}
         contentContainerStyle={styles.messagesContent}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Text style={[styles.emptyText, {
-              color: theme.colors.textSecondary,
-              fontSize: theme.fonts.sizes.lg,
-            }]}>
-              Start a conversation with your grandparent coach...
-            </Text>
+        renderItem={({ item }) => (
+          <View style={styles.messageWrapper}>
+            {item.role === 'user' ? (
+              <View style={styles.userMessage}>
+                <Text style={styles.userMessageText}>{item.content}</Text>
+                <Text style={styles.timestamp}>{item.timestamp}</Text>
+              </View>
+            ) : (
+              <View style={styles.coachMessage}>
+                <Text style={styles.coachMessageText}>{item.content}</Text>
+                <Text style={styles.timestamp}>{item.timestamp}</Text>
+              </View>
+            )}
           </View>
-        }
+        )}
+        onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
+        style={styles.messagesList}
       />
 
-      {isTyping && (
-        <View style={[styles.typingIndicator, { backgroundColor: theme.colors.surface }]}>
-          <Text style={[styles.typingText, {
-            color: theme.colors.textSecondary,
-            fontSize: theme.fonts.sizes.sm,
-          }]}>
-            Coach is typing...
-          </Text>
-        </View>
-      )}
-
-      <InputBar
-        onSendMessage={handleSendMessage}
-        disabled={isLoading || isTyping}
-        isPro={isPro}
-        placeholder="Ask about tantrums, bedtime, sharing, or any parenting challenge..."
-      />
-    </KeyboardAvoidingView>
+      <View style={styles.inputContainer}>
+        <TextInput
+          value={draft}
+          onChangeText={setDraft}
+          placeholder="Type your question..."
+          placeholderTextColor="#999999"
+          style={styles.input}
+          multiline
+        />
+        <TouchableOpacity
+          style={styles.sendButton}
+          onPress={() => { handleSendMessage(draft); setDraft(''); }}
+        >
+          <Ionicons name="send" size={20} color="#ffffff" />
+          <Text style={styles.sendButtonText}>Send</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#ffffff',
   },
-  messagesList: {
+  header: {
+    padding: 20,
+    paddingTop: 60,
+    backgroundColor: '#f8f9fa',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#333333',
+  },
+  messagesContainer: {
     flex: 1,
-  },
-  messagesContent: {
-    paddingBottom: 16,
-  },
-  emptyState: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 32,
-  },
-  emptyText: {
-    fontFamily: 'System',
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-  typingIndicator: {
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#e2e8f0',
+    paddingTop: 16,
   },
-  typingText: {
-    fontFamily: 'System',
-    fontStyle: 'italic',
+  messageWrapper: {
+    marginBottom: 16,
+  },
+  userMessage: {
+    backgroundColor: '#007AFF',
+    padding: 12,
+    borderRadius: 18,
+    marginLeft: 50,
+    marginRight: 16,
+    alignSelf: 'flex-end',
+  },
+  userMessageText: {
+    color: '#ffffff',
+    fontSize: 16,
+    lineHeight: 20,
+  },
+  coachMessage: {
+    backgroundColor: '#f8f9fa',
+    padding: 12,
+    borderRadius: 18,
+    marginLeft: 16,
+    marginRight: 50,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+  },
+  coachMessageText: {
+    color: '#333333',
+    fontSize: 16,
+    lineHeight: 20,
+  },
+  timestamp: {
+    fontSize: 12,
+    color: '#999999',
+    marginTop: 4,
+    textAlign: 'right',
+  },
+  inputContainer: {
+    padding: 16,
+    backgroundColor: '#ffffff',
+    borderTopWidth: 1,
+    borderTopColor: '#e9ecef',
+    gap: 8,
+  },
+  input: {
+    minHeight: 44,
+    maxHeight: 120,
+    borderWidth: 1,
+    borderColor: '#e9ecef',
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    fontSize: 16,
+    color: '#333333',
+    backgroundColor: '#f8f9fa',
+  },
+  sendButton: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  sendButtonText: {
+    color: '#ffffff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });

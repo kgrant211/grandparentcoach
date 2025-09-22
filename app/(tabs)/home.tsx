@@ -1,85 +1,38 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useTheme } from '../../lib/theme';
-import { useSessionStore } from '../../state/useSessionStore';
-import { LargeButton } from '../../components/LargeButton';
-import { Header } from '../../components/Header';
-import { POPULAR_SITUATIONS } from '../../lib/constants';
 
 export default function HomeScreen() {
-  const { theme } = useTheme();
   const router = useRouter();
-  const { 
-    sessions, 
-    loadSessions, 
-    startCoachingSession,
-    isPro 
-  } = useSessionStore();
 
-  useEffect(() => {
-    loadSessions();
-  }, [loadSessions]);
-
-  const handleStartCoaching = async () => {
-    try {
-      const session = await startCoachingSession();
-      if (session) {
-        router.push('/(tabs)/ask');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to start coaching session. Please try again.');
-    }
-  };
-
-  const handlePopularSituation = async (situationId: string) => {
-    try {
-      const session = await startCoachingSession({
-        situationType: situationId,
-      });
-      if (session) {
-        router.push('/(tabs)/ask');
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to start coaching session. Please try again.');
-    }
-  };
-
-  const handleResumeSession = (sessionId: string) => {
+  const handleStartCoaching = () => {
     router.push('/(tabs)/ask');
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <Header 
-        title="Grandparent Coach" 
-        subtitle="Your gentle parenting guide"
-      />
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Grandparent Coach</Text>
+        <Text style={styles.subtitle}>Your gentle parenting guide</Text>
+      </View>
       
       <ScrollView 
         style={styles.content}
         showsVerticalScrollIndicator={false}
       >
         {/* Welcome Section */}
-        <View style={[styles.welcomeSection, { backgroundColor: theme.colors.surface }]}>
-          <Text style={[styles.welcomeTitle, {
-            color: theme.colors.text,
-            fontSize: theme.fonts.sizes.xxl,
-          }]}>
+        <View style={styles.welcomeSection}>
+          <Text style={styles.welcomeTitle}>
             Hi! I'm your grandparent coach.
           </Text>
-          <Text style={[styles.welcomeText, {
-            color: theme.colors.textSecondary,
-            fontSize: theme.fonts.sizes.lg,
-          }]}>
+          <Text style={styles.welcomeText}>
             Before you watch the grandkids—or after a tricky moment—ask me anything. 
             I'll ask a few quick questions so my suggestions fit your situation.
           </Text>
@@ -87,115 +40,55 @@ export default function HomeScreen() {
 
         {/* Start Coaching Button */}
         <View style={styles.buttonSection}>
-          <LargeButton
-            title="Start a Coaching Session"
+          <TouchableOpacity
+            style={styles.startButton}
             onPress={handleStartCoaching}
-            icon="chatbubble-ellipses"
-            size="large"
-            fullWidth
-            accessibilityLabel="Start a new coaching session"
-            accessibilityHint="Tap to begin a new conversation with your grandparent coach"
-          />
+          >
+            <Ionicons name="chatbubble-ellipses" size={24} color="#ffffff" />
+            <Text style={styles.startButtonText}>Start a Coaching Session</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Popular Situations */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, {
-            color: theme.colors.text,
-            fontSize: theme.fonts.sizes.xl,
-          }]}>
+          <Text style={styles.sectionTitle}>
             Popular Situations
           </Text>
           
           <View style={styles.situationGrid}>
-            {POPULAR_SITUATIONS.map((situation) => (
-              <TouchableOpacity
-                key={situation.id}
-                style={[styles.situationCard, {
-                  backgroundColor: theme.colors.surface,
-                  borderColor: theme.colors.border,
-                }]}
-                onPress={() => handlePopularSituation(situation.id)}
-                accessibilityLabel={`Get help with ${situation.title}`}
-                accessibilityHint={`Tap to get coaching advice for ${situation.description}`}
-              >
-                <Text style={[styles.situationIcon, { fontSize: 32 }]}>
-                  {situation.icon}
-                </Text>
-                <Text style={[styles.situationTitle, {
-                  color: theme.colors.text,
-                  fontSize: theme.fonts.sizes.base,
-                }]}>
-                  {situation.title}
-                </Text>
-                <Text style={[styles.situationDescription, {
-                  color: theme.colors.textSecondary,
-                  fontSize: theme.fonts.sizes.sm,
-                }]}>
-                  {situation.description}
-                </Text>
-              </TouchableOpacity>
-            ))}
+            <TouchableOpacity style={styles.situationCard} onPress={() => router.push('/(tabs)/ask?topic=tantrums')}>
+              <Text style={styles.situationIcon}>👶</Text>
+              <Text style={styles.situationTitle}>Tantrums</Text>
+              <Text style={styles.situationDescription}>
+                Help with meltdowns and emotional outbursts
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.situationCard} onPress={() => router.push('/(tabs)/ask?topic=mealtime')}>
+              <Text style={styles.situationIcon}>🍽️</Text>
+              <Text style={styles.situationTitle}>Mealtime</Text>
+              <Text style={styles.situationDescription}>
+                Picky eating and dinner battles
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.situationCard} onPress={() => router.push('/(tabs)/ask?topic=bedtime')}>
+              <Text style={styles.situationIcon}>😴</Text>
+              <Text style={styles.situationTitle}>Bedtime</Text>
+              <Text style={styles.situationDescription}>
+                Sleep routines and bedtime resistance
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity style={styles.situationCard} onPress={() => router.push('/(tabs)/ask?topic=screen_time')}>
+              <Text style={styles.situationIcon}>📱</Text>
+              <Text style={styles.situationTitle}>Screen Time</Text>
+              <Text style={styles.situationDescription}>
+                Managing technology and digital boundaries
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
-
-        {/* Recent Sessions */}
-        {sessions.length > 0 && (
-          <View style={styles.section}>
-            <Text style={[styles.sectionTitle, {
-              color: theme.colors.text,
-              fontSize: theme.fonts.sizes.xl,
-            }]}>
-              Recent Conversations
-            </Text>
-            
-            {sessions.slice(0, 3).map((session) => (
-              <TouchableOpacity
-                key={session.id}
-                style={[styles.sessionCard, {
-                  backgroundColor: theme.colors.surface,
-                  borderColor: theme.colors.border,
-                }]}
-                onPress={() => handleResumeSession(session.id)}
-                accessibilityLabel={`Resume conversation: ${session.title || 'Untitled'}`}
-                accessibilityHint="Tap to continue this conversation"
-              >
-                <View style={styles.sessionContent}>
-                  <Text style={[styles.sessionTitle, {
-                    color: theme.colors.text,
-                    fontSize: theme.fonts.sizes.base,
-                  }]}>
-                    {session.title || 'Untitled Conversation'}
-                  </Text>
-                  <Text style={[styles.sessionDate, {
-                    color: theme.colors.textSecondary,
-                    fontSize: theme.fonts.sizes.sm,
-                  }]}>
-                    {new Date(session.updated_at).toLocaleDateString()}
-                  </Text>
-                </View>
-                <Ionicons 
-                  name="chevron-forward" 
-                  size={20} 
-                  color={theme.colors.textSecondary} 
-                />
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
-
-        {/* Pro Status */}
-        {!isPro && (
-          <View style={[styles.proBanner, { backgroundColor: theme.colors.accent }]}>
-            <Ionicons name="star" size={24} color={theme.colors.background} />
-            <Text style={[styles.proText, {
-              color: theme.colors.background,
-              fontSize: theme.fonts.sizes.base,
-            }]}>
-              Upgrade to Pro for unlimited sessions, voice input, and more features
-            </Text>
-          </View>
-        )}
       </ScrollView>
     </View>
   );
@@ -204,6 +97,24 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#ffffff',
+  },
+  header: {
+    padding: 20,
+    paddingTop: 60,
+    backgroundColor: '#f8f9fa',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '700',
+    color: '#333333',
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666666',
   },
   content: {
     flex: 1,
@@ -213,27 +124,46 @@ const styles = StyleSheet.create({
     padding: 24,
     borderRadius: 12,
     marginVertical: 16,
+    backgroundColor: '#f8f9fa',
   },
   welcomeTitle: {
-    fontFamily: 'System',
+    fontSize: 24,
     fontWeight: '700',
     marginBottom: 8,
     lineHeight: 32,
+    color: '#333333',
   },
   welcomeText: {
-    fontFamily: 'System',
+    fontSize: 16,
     lineHeight: 24,
+    color: '#666666',
   },
   buttonSection: {
     marginVertical: 24,
+  },
+  startButton: {
+    backgroundColor: '#007AFF',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  startButtonText: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '600',
   },
   section: {
     marginVertical: 24,
   },
   sectionTitle: {
-    fontFamily: 'System',
+    fontSize: 20,
     fontWeight: '600',
     marginBottom: 16,
+    color: '#333333',
   },
   situationGrid: {
     flexDirection: 'row',
@@ -245,55 +175,27 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 12,
     borderWidth: 1,
+    borderColor: '#e9ecef',
     alignItems: 'center',
     minHeight: 120,
     justifyContent: 'center',
+    backgroundColor: '#ffffff',
   },
   situationIcon: {
+    fontSize: 32,
     marginBottom: 8,
   },
   situationTitle: {
-    fontFamily: 'System',
+    fontSize: 16,
     fontWeight: '600',
     textAlign: 'center',
     marginBottom: 4,
+    color: '#333333',
   },
   situationDescription: {
-    fontFamily: 'System',
+    fontSize: 14,
     textAlign: 'center',
     lineHeight: 18,
-  },
-  sessionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    marginBottom: 8,
-  },
-  sessionContent: {
-    flex: 1,
-  },
-  sessionTitle: {
-    fontFamily: 'System',
-    fontWeight: '500',
-    marginBottom: 4,
-  },
-  sessionDate: {
-    fontFamily: 'System',
-  },
-  proBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 16,
-    borderRadius: 12,
-    marginVertical: 24,
-    gap: 8,
-  },
-  proText: {
-    fontFamily: 'System',
-    fontWeight: '500',
-    flex: 1,
-    lineHeight: 20,
+    color: '#666666',
   },
 });

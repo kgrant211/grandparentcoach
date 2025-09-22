@@ -5,11 +5,8 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTheme } from '../../lib/theme';
-import { speak } from '../../lib/tts';
 
 interface Guide {
   id: string;
@@ -55,108 +52,25 @@ const GUIDES: Guide[] = [
       'Give them time to process'
     ],
     icon: '🚫'
-  },
-  {
-    id: 'repairing-after-conflict',
-    title: 'Repairing After We Lose Our Cool',
-    content: 'We all make mistakes as caregivers. The important thing is to repair the connection afterward. When you apologize and reconnect, you teach your grandchild that relationships can be mended and that everyone deserves forgiveness.',
-    tryThis: [
-      'Take time to calm down first',
-      'Acknowledge what happened',
-      'Apologize sincerely',
-      'Ask how you can help them feel better'
-    ],
-    icon: '💝'
-  },
-  {
-    id: 'screens-and-limits',
-    title: 'Screens & Limits',
-    content: 'Screen time can be a source of conflict, but it doesn\'t have to be. Set clear, consistent limits while being understanding about why screens are appealing. Focus on what your grandchild can do instead of just what they can\'t.',
-    tryThis: [
-      'Set a timer together',
-      'Create a "screen-free" zone',
-      'Plan fun alternatives',
-      'Be consistent with the rules'
-    ],
-    icon: '📱'
-  },
-  {
-    id: 'grandparent-parent-alignment',
-    title: 'Grandparent–Parent Alignment',
-    content: 'Staying aligned with the parents\' rules while maintaining your special grandparent relationship can be tricky. The key is open communication, respect for their parenting choices, and finding ways to support their goals while creating your own meaningful connections.',
-    tryThis: [
-      'Ask about their parenting approach',
-      'Share your observations gently',
-      'Support their rules consistently',
-      'Focus on your unique grandparent role'
-    ],
-    icon: '👨‍👩‍👧‍👦'
   }
 ];
 
 export default function GuidesScreen() {
-  const { theme } = useTheme();
-
-  const handlePlayAudio = (content: string) => {
-    speak(content, {
-      rate: 0.9,
-      pitch: 1.0,
-      onError: (error) => {
-        Alert.alert('Audio Error', 'Unable to play audio. Please try again.');
-        console.error('TTS Error:', error);
-      },
-    });
-  };
-
   const renderGuide = (guide: Guide) => (
-    <View key={guide.id} style={[styles.guideCard, { 
-      backgroundColor: theme.colors.surface,
-      borderColor: theme.colors.border,
-    }]}>
+    <View key={guide.id} style={styles.guideCard}>
       <View style={styles.guideHeader}>
         <Text style={styles.guideIcon}>{guide.icon}</Text>
-        <Text style={[styles.guideTitle, {
-          color: theme.colors.text,
-          fontSize: theme.fonts.sizes.xl,
-        }]}>
-          {guide.title}
-        </Text>
-        <TouchableOpacity
-          style={[styles.audioButton, { backgroundColor: theme.colors.primary }]}
-          onPress={() => handlePlayAudio(guide.content)}
-          accessibilityLabel="Play audio"
-          accessibilityHint="Tap to hear this guide read aloud"
-        >
-          <Ionicons name="volume-high" size={20} color={theme.colors.background} />
-        </TouchableOpacity>
+        <Text style={styles.guideTitle}>{guide.title}</Text>
       </View>
 
-      <Text style={[styles.guideContent, {
-        color: theme.colors.text,
-        fontSize: theme.fonts.sizes.lg,
-      }]}>
-        {guide.content}
-      </Text>
+      <Text style={styles.guideContent}>{guide.content}</Text>
 
-      <View style={[styles.tryThisSection, { 
-        backgroundColor: theme.colors.background,
-        borderColor: theme.colors.border,
-      }]}>
-        <Text style={[styles.tryThisTitle, {
-          color: theme.colors.text,
-          fontSize: theme.fonts.sizes.base,
-        }]}>
-          Try this today:
-        </Text>
+      <View style={styles.tryThisSection}>
+        <Text style={styles.tryThisTitle}>Try this today:</Text>
         {guide.tryThis.map((item, index) => (
           <View key={index} style={styles.tryThisItem}>
-            <Text style={[styles.bullet, { color: theme.colors.primary }]}>•</Text>
-            <Text style={[styles.tryThisText, {
-              color: theme.colors.text,
-              fontSize: theme.fonts.sizes.base,
-            }]}>
-              {item}
-            </Text>
+            <Text style={styles.bullet}>•</Text>
+            <Text style={styles.tryThisText}>{item}</Text>
           </View>
         ))}
       </View>
@@ -164,28 +78,22 @@ export default function GuidesScreen() {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      <Header 
-        title="Parenting Guides" 
-        subtitle="Quick tips for common situations"
-      />
-      
-      <ScrollView 
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Parenting Guides</Text>
+        <Text style={styles.subtitle}>Quick tips for common situations</Text>
+      </View>
+
+      <ScrollView
         style={styles.content}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.introSection}>
-          <Text style={[styles.introTitle, {
-            color: theme.colors.text,
-            fontSize: theme.fonts.sizes.xxl,
-          }]}>
+          <Text style={styles.introTitle}>
             Gentle Parenting for Grandparents
           </Text>
-          <Text style={[styles.introText, {
-            color: theme.colors.textSecondary,
-            fontSize: theme.fonts.sizes.lg,
-          }]}>
-            These bite-sized guides help you understand modern parenting approaches 
+          <Text style={styles.introText}>
+            These bite-sized guides help you understand modern parenting approaches
             and build stronger connections with your grandchildren.
           </Text>
         </View>
@@ -199,6 +107,24 @@ export default function GuidesScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#ffffff',
+  },
+  header: {
+    padding: 20,
+    paddingTop: 60,
+    backgroundColor: '#f8f9fa',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e9ecef',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#333333',
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666666',
   },
   content: {
     flex: 1,
@@ -207,22 +133,28 @@ const styles = StyleSheet.create({
   introSection: {
     padding: 24,
     marginVertical: 16,
+    backgroundColor: '#f8f9fa',
+    borderRadius: 12,
   },
   introTitle: {
-    fontFamily: 'System',
+    fontSize: 28,
     fontWeight: '700',
     marginBottom: 8,
     lineHeight: 32,
+    color: '#333333',
   },
   introText: {
-    fontFamily: 'System',
+    fontSize: 16,
     lineHeight: 24,
+    color: '#666666',
   },
   guideCard: {
     padding: 24,
     borderRadius: 12,
     borderWidth: 1,
+    borderColor: '#e9ecef',
     marginBottom: 24,
+    backgroundColor: '#ffffff',
   },
   guideHeader: {
     flexDirection: 'row',
@@ -231,36 +163,33 @@ const styles = StyleSheet.create({
   },
   guideIcon: {
     fontSize: 32,
-    marginRight: 8,
+    marginRight: 12,
   },
   guideTitle: {
-    fontFamily: 'System',
+    fontSize: 20,
     fontWeight: '600',
     flex: 1,
     lineHeight: 28,
-  },
-  audioButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginLeft: 8,
+    color: '#333333',
   },
   guideContent: {
-    fontFamily: 'System',
+    fontSize: 16,
     lineHeight: 24,
+    color: '#333333',
     marginBottom: 24,
   },
   tryThisSection: {
     padding: 16,
     borderRadius: 8,
     borderWidth: 1,
+    borderColor: '#e9ecef',
+    backgroundColor: '#f8f9fa',
   },
   tryThisTitle: {
-    fontFamily: 'System',
+    fontSize: 18,
     fontWeight: '600',
     marginBottom: 8,
+    color: '#333333',
   },
   tryThisItem: {
     flexDirection: 'row',
@@ -271,10 +200,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     marginRight: 8,
     marginTop: 2,
+    color: '#007AFF',
   },
   tryThisText: {
-    fontFamily: 'System',
+    fontSize: 16,
     flex: 1,
     lineHeight: 20,
+    color: '#333333',
   },
 });

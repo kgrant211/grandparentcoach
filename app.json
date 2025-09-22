@@ -1,13 +1,11 @@
 {
   "expo": {
     "name": "Grandparent Coach",
-    "slug": "grantparent-coach",
+    "slug": "grandparent-coach",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -19,18 +17,13 @@
       "bundleIdentifier": "com.grandparentcoach.app"
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/icon.png",
-        "backgroundColor": "#ffffff"
-      },
       "package": "com.grandparentcoach.app"
     },
-    "web": {
-      "favicon": "./assets/icon.png"
-    },
+    "web": {},
     "scheme": "grandparentcoach",
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-dev-client"
     ],
     "extra": {
       "router": {

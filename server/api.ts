@@ -1,3 +1,17 @@
+export async function askCoachAPI(payload: {
+  context?: { topic?: string; ageRange?: string };
+  messages: { role: 'user' | 'assistant'; content: string }[];
+}) {
+  const base = process.env.EXPO_PUBLIC_API_BASE || 'http://localhost:3000';
+  const res = await fetch(`${base}/coach`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) throw new Error('Coach API error');
+  return res.json() as Promise<{ content: string }>; 
+}
+
 import { filterContent } from '../lib/validation';
 
 export interface CoachRequest {
