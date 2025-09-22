@@ -2,7 +2,7 @@ export async function askCoachAPI(payload: {
   context?: { topic?: string; ageRange?: string };
   messages: { role: 'user' | 'assistant'; content: string }[];
 }) {
-  const base = process.env.EXPO_PUBLIC_API_BASE || 'http://localhost:3000';
+  const base = process.env.EXPO_PUBLIC_API_BASE || 'http://localhost:3010';
   const res = await fetch(`${base}/coach`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -38,7 +38,7 @@ export interface CoachResponse {
   error?: string;
 }
 
-const API_BASE = process.env.EXPO_PUBLIC_API_BASE || 'https://your-api-domain.com';
+const API_BASE = process.env.EXPO_PUBLIC_API_BASE || 'http://localhost:3010';
 
 export async function askCoach(payload: CoachRequest): Promise<CoachResponse> {
   try {

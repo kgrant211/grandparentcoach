@@ -8,9 +8,19 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { loadSessions } from '../../lib/localSessions';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const [recent, setRecent] = React.useState<{id:string; title:string; updatedAt:string;}[]>([]);
+
+  React.useEffect(() => {
+    const sub = router; // noop to keep dependency minimal
+    (async () => {
+      const sessions = await loadSessions();
+      setRecent(sessions.slice(0,5));
+    })();
+  }, [router]);
 
   const handleStartCoaching = () => {
     router.push('/(tabs)/ask');
@@ -89,6 +99,19 @@ export default function HomeScreen() {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Recent Conversations */}
+        {recent.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Recent Conversations</Text>
+            {recent.map(s => (
+              <TouchableOpacity key={s.id} style={{ paddingVertical:12, borderBottomColor:'#e9ecef', borderBottomWidth:1 }} onPress={() => router.push('/(tabs)/ask')}>
+                <Text style={{ fontSize:16, color:'#333' }}>{s.title || 'Conversation'}</Text>
+                <Text style={{ fontSize:12, color:'#999' }}>{new Date(s.updatedAt).toLocaleString()}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
       </ScrollView>
     </View>
   );

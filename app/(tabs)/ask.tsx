@@ -11,10 +11,23 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
 import { askCoachAPI } from '../../server/api';
+import {
+  createSession as createLocalSession,
+  loadSessions as loadLocalSessions,
+  loadMessages as loadLocalMessages,
+  saveMessages as saveLocalMessages,
+  touchSession as touchLocal,
+  type LocalSession,
+  type LocalMessage,
+  getFreeCount,
+  incrementFreeCount,
+} from '../../lib/localSessions';
+import { MAX_FREE_SESSIONS } from '../../lib/constants';
 
 export default function AskScreen() {
   const params = useLocalSearchParams();
   const topic = typeof params.topic === 'string' ? params.topic : undefined;
+  const sidParam = typeof params.sid === 'string' ? params.sid : undefined;
 
   const [messages, setMessages] = useState([
     {
@@ -26,9 +39,47 @@ export default function AskScreen() {
   ]);
 
   const [draft, setDraft] = useState('');
+  const [sessionList, setSessionList] = useState<LocalSession[]>([]);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [showSwitcher, setShowSwitcher] = useState(false);
+
+  const ensureSession = async (): Promise<string> => {
+    if (currentSessionId) return currentSessionId;
+    const session = await createLocalSession('New conversation');
+    setCurrentSessionId(session.id);
+    setSessionList(prev => [session, ...prev]);
+    return session.id;
+  };
+
+  const loadSessionData = async (sessionId: string) => {
+    const msgs = await loadLocalMessages(sessionId);
+    if (msgs.length) setMessages(msgs as any);
+  };
+
+  const refreshSessions = async () => {
+    const list = await loadLocalSessions();
+    setSessionList(list);
+  };
+
+  React.useEffect(() => {
+    refreshSessions();
+  }, []);
+
+  // Handle deep-linking into a specific session id
+  React.useEffect(() => {
+    (async () => {
+      if (sidParam) {
+        setCurrentSessionId(sidParam);
+        await loadSessionData(sidParam);
+      }
+    })();
+  }, [sidParam]);
 
   const handleSendMessage = async (content: string) => {
     if (!content.trim()) return;
+
+    const sessionId = await ensureSession();
+    await touchLocal(sessionId);
 
     // Add user message
     const newMessage = {
@@ -38,12 +89,43 @@ export default function AskScreen() {
       timestamp: new Date().toLocaleTimeString(),
     };
 
-    setMessages(prev => [...prev, newMessage]);
+    // Ensure we are appending to the currently selected session's messages from storage, to avoid stale state
+    let base = await loadLocalMessages(sessionId);
+    if (!Array.isArray(base)) base = [] as any;
+    const nextLocal: LocalMessage[] = [...(base as any), newMessage];
+    setMessages(nextLocal as any);
+    await saveLocalMessages(sessionId, nextLocal);
+
+    // Paywall check AFTER showing the user's message
+    const count = await getFreeCount();
+    if (count >= MAX_FREE_SESSIONS) {
+      const paywallMsg = {
+        id: 'paywall-' + Date.now().toString(),
+        role: 'assistant' as const,
+        content: 'You\'ve reached your 3 free Q&A messages. Upgrade to continue.',
+        timestamp: new Date().toLocaleTimeString(),
+      } as any;
+      const blocked = [...nextLocal, paywallMsg] as any;
+      setMessages(blocked);
+      await saveLocalMessages(sessionId, blocked);
+      Alert.alert('Free limit reached', 'You have reached the 3 free Q&A limit. Upgrade to continue.');
+      return;
+    }
+
+    // Auto-name conversation from first user message
+    if (nextLocal.length === 1) {
+      try {
+        const { generateTitleFromText, updateSessionTitle } = await import('../../lib/localSessions');
+        const title = generateTitleFromText(newMessage.content, 'Conversation');
+        await updateSessionTitle(sessionId, title);
+        refreshSessions();
+      } catch {}
+    }
 
     try {
       const { content: coach } = await askCoachAPI({
         context: { topic },
-        messages: [...messages, newMessage].map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+        messages: nextLocal.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
       });
       const coachResponse = {
         id: (Date.now() + 1).toString(),
@@ -51,15 +133,20 @@ export default function AskScreen() {
         content: coach || 'Thanks for sharing. Could you tell me a bit more about the situation?',
         timestamp: new Date().toLocaleTimeString(),
       };
-      setMessages(prev => [...prev, coachResponse]);
+      const updated = [...nextLocal, coachResponse] as any;
+      setMessages(updated);
+      await saveLocalMessages(sessionId, updated);
+      await incrementFreeCount();
+      await refreshSessions();
     } catch (e) {
       Alert.alert('Network error', 'Unable to reach the coach. Please try again.');
     }
   };
 
-  // Seed tailored clarifying questions for popular topics on first render
+  // Seed tailored clarifying questions for popular topics on first render of the very first session only
   React.useEffect(() => {
     if (!topic) return;
+    if (currentSessionId) return;
     setMessages(prev => {
       if (prev.length > 1) return prev;
       const friendly = (t: string) => {
@@ -87,7 +174,7 @@ export default function AskScreen() {
       return [...prev, tailored];
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [topic]);
+  }, [topic, currentSessionId]);
 
   const renderMessage = ({ item }: { item: any }) => {
     if (item.role === 'user') {
@@ -120,7 +207,50 @@ export default function AskScreen() {
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Ask Your Coach</Text>
+        <TouchableOpacity onPress={() => setShowSwitcher(s => !s)} accessibilityLabel="Switch conversation" style={{position:'absolute', right:16, top:60}}>
+          <Ionicons name="swap-horizontal" size={22} color="#007AFF" />
+        </TouchableOpacity>
       </View>
+
+      {showSwitcher && (
+        <View style={{ paddingHorizontal:16, paddingVertical:8, borderBottomColor:'#e9ecef', borderBottomWidth:1 }}>
+          <ScrollSessions
+            sessions={sessionList}
+            currentId={currentSessionId}
+            onNew={async () => {
+              const s = await createLocalSession('New conversation');
+              setCurrentSessionId(s.id);
+              const greeting = {
+                id: 'greet-' + Date.now().toString(),
+                role: 'assistant' as const,
+                content: 'Hi! I\'m here to help you with your grandparenting questions. What\'s going on with your grandchild today?',
+                timestamp: new Date().toLocaleTimeString(),
+              } as any;
+              setMessages([greeting] as any);
+              await saveLocalMessages(s.id, [greeting] as any);
+              setShowSwitcher(false);
+              await refreshSessions();
+            }}
+            onSelect={async (id) => {
+              setCurrentSessionId(id);
+              const msgs = await loadLocalMessages(id);
+              if (msgs && (msgs as any).length) {
+                setMessages((msgs as any));
+              } else {
+                const greeting = {
+                  id: 'greet-' + Date.now().toString(),
+                  role: 'assistant' as const,
+                  content: 'Hi! I\'m here to help you with your grandparenting questions. What\'s going on with your grandchild today?',
+                  timestamp: new Date().toLocaleTimeString(),
+                } as any;
+                setMessages([greeting] as any);
+                await saveLocalMessages(id, [greeting] as any);
+              }
+              setShowSwitcher(false);
+            }}
+          />
+        </View>
+      )}
 
       <FlatList
         ref={listRef}
@@ -163,6 +293,21 @@ export default function AskScreen() {
           <Text style={styles.sendButtonText}>Send</Text>
         </TouchableOpacity>
       </View>
+    </View>
+  );
+}
+
+function ScrollSessions({ sessions, currentId, onNew, onSelect }: { sessions: LocalSession[]; currentId: string | null; onNew: () => void; onSelect: (id: string) => void; }) {
+  return (
+    <View style={{ flexDirection:'row', gap:8, flexWrap:'wrap' }}>
+      <TouchableOpacity onPress={onNew} style={{ paddingVertical:8, paddingHorizontal:12, borderRadius:12, borderWidth:1, borderColor:'#e9ecef' }}>
+        <Text style={{ color:'#007AFF', fontWeight:'600' }}>+ New</Text>
+      </TouchableOpacity>
+      {sessions.map(s => (
+        <TouchableOpacity key={s.id} onPress={() => onSelect(s.id)} style={{ paddingVertical:8, paddingHorizontal:12, borderRadius:12, borderWidth:1, borderColor: s.id===currentId?'#007AFF':'#e9ecef', backgroundColor: s.id===currentId?'#E8F0FE':'#fff' }}>
+          <Text style={{ color:'#333' }}>{s.title || 'Conversation'}</Text>
+        </TouchableOpacity>
+      ))}
     </View>
   );
 }
