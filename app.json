@@ -17,7 +17,8 @@
       "bundleIdentifier": "com.grandparentcoach.app"
     },
     "android": {
-      "package": "com.grandparentcoach.app"
+      "package": "com.grandparentcoach.app",
+      "permissions": ["com.android.vending.BILLING"]
     },
     "web": {},
     "scheme": "grandparentcoach",
