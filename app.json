@@ -29,9 +29,6 @@
     "extra": {
       "router": {
         "origin": false
-      },
-      "eas": {
-        "projectId": "2b418d62-e21d-4dab-a5b7-7701c9eecbd3"
       }
     },
     "owner": "kgrant211"
