@@ -187,3 +187,4 @@ For support or questions, please contact [your-email@domain.com].
 ## Safety Notice
 
 This app provides educational support only and is not medical or legal advice. For medical concerns or emergencies, contact a licensed professional or local emergency services immediately.
+# grandparentcoach
