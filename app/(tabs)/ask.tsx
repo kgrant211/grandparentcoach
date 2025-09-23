@@ -9,7 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { askCoachAPI } from '../../server/api';
 import {
   createSession as createLocalSession,
@@ -25,6 +25,7 @@ import {
 import { MAX_FREE_SESSIONS } from '../../lib/constants';
 
 export default function AskScreen() {
+  const router = useRouter();
   const params = useLocalSearchParams();
   const topic = typeof params.topic === 'string' ? params.topic : undefined;
   const sidParam = typeof params.sid === 'string' ? params.sid : undefined;
@@ -99,16 +100,10 @@ export default function AskScreen() {
     // Paywall check AFTER showing the user's message
     const count = await getFreeCount();
     if (count >= MAX_FREE_SESSIONS) {
-      const paywallMsg = {
-        id: 'paywall-' + Date.now().toString(),
-        role: 'assistant' as const,
-        content: 'You\'ve reached your 3 free Q&A messages. Upgrade to continue.',
-        timestamp: new Date().toLocaleTimeString(),
-      } as any;
-      const blocked = [...nextLocal, paywallMsg] as any;
-      setMessages(blocked);
-      await saveLocalMessages(sessionId, blocked);
-      Alert.alert('Free limit reached', 'You have reached the 3 free Q&A limit. Upgrade to continue.');
+      Alert.alert('Free limit reached', 'Upgrade to continue with unlimited sessions.', [
+        { text: 'Not now', style: 'cancel' },
+        { text: 'Upgrade', onPress: () => router.push('/paywall') }
+      ]);
       return;
     }
 
