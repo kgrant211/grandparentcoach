@@ -14,7 +14,10 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.grandparentcoach.app"
+      "bundleIdentifier": "com.grandparentcoach.app",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.grandparentcoach.app",
@@ -26,7 +29,6 @@
     "scheme": "grandparentcoach",
     "plugins": [
       "expo-router",
-      "expo-dev-client",
       [
         "expo-build-properties",
         {
