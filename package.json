@@ -22,7 +22,6 @@
     "@tanstack/react-query": "^5.89.0",
     "cors": "^2.8.5",
     "expo": "^54.0.9",
-    "expo-dev-client": "~6.0.12",
     "expo-haptics": "~13.0.1",
     "expo-linking": "^8.0.8",
     "expo-router": "~3.5.10",
