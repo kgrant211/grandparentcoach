@@ -8,32 +8,29 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { purchaseMonthly, restore, isPro } from '../../lib/revenuecat';
 
 export default function SettingsScreen() {
-  const handleUpgrade = () => {
-    Alert.alert(
-      'Upgrade to Pro',
-      'Pro features include:\n• Unlimited coaching sessions\n• Voice input\n• Save to favorites\n• Generate summaries\n• Priority support',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Upgrade', onPress: () => {
-          Alert.alert('Coming Soon', 'Upgrade functionality will be available soon!');
-        }},
-      ]
-    );
+  const handleUpgrade = async () => {
+    try {
+      const result = await purchaseMonthly();
+      const pro = await isPro();
+      if (pro) Alert.alert('Success', 'You now have Pro!');
+      else Alert.alert('Purchase', 'Purchase completed. Entitlement pending.');
+    } catch (e: any) {
+      Alert.alert('Purchase failed', e?.message || 'Please try again later.');
+    }
   };
 
-  const handleRestorePurchases = () => {
-    Alert.alert(
-      'Restore Purchases',
-      'This will restore any previous purchases associated with your account.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { text: 'Restore', onPress: () => {
-          Alert.alert('Restore', 'Purchase restoration will be available soon!');
-        }},
-      ]
-    );
+  const handleRestorePurchases = async () => {
+    try {
+      await restore();
+      const pro = await isPro();
+      if (pro) Alert.alert('Restored', 'Your Pro access has been restored.');
+      else Alert.alert('Restore', 'No active purchases found.');
+    } catch (e: any) {
+      Alert.alert('Restore failed', e?.message || 'Please try again later.');
+    }
   };
 
   const handleExportData = () => {
