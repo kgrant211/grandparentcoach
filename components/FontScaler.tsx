@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Slider } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useTheme } from '../lib/theme';
 
 interface FontScalerProps {
@@ -48,18 +48,11 @@ export const FontScaler: React.FC<FontScalerProps> = ({
           A
         </Text>
         
-        <Slider
-          style={styles.slider}
-          minimumValue={minScale}
-          maximumValue={maxScale}
-          value={currentScale}
-          onValueChange={onFontSizeChange}
-          minimumTrackTintColor={theme.colors.primary}
-          maximumTrackTintColor={theme.colors.border}
-          thumbStyle={[styles.thumb, { backgroundColor: theme.colors.primary }]}
-          accessibilityLabel="Text size slider"
-          accessibilityHint="Adjust the text size by sliding left or right"
-        />
+        <View style={styles.sliderPlaceholder}>
+          <Text style={[styles.sliderText, { color: theme.colors.text }]}>
+            Font scale: {currentScale.toFixed(1)}x
+          </Text>
+        </View>
         
         <Text style={[styles.label, {
           color: theme.colors.textSecondary,
@@ -110,14 +103,18 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginHorizontal: 8,
   },
-  slider: {
+  sliderPlaceholder: {
     flex: 1,
     height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+    marginHorizontal: 8,
   },
-  thumb: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+  sliderText: {
+    fontSize: 16,
+    fontWeight: '500',
   },
   previewContainer: {
     padding: 16,

@@ -11,7 +11,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
   });
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '', {
   auth: {
     storage: AsyncStorage,
     autoRefreshToken: true,
@@ -162,7 +162,7 @@ export const addFavorite = async (userId: string, sessionId: string, title: stri
     .from('favorites')
     .insert({
       user_id: userId,
-      session_id,
+      session_id: sessionId,
       title,
       summary,
     })

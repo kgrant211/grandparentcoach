@@ -251,7 +251,7 @@ export default function AskScreen() {
         ref={listRef}
         data={messages}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.messagesContent}
+        contentContainerStyle={styles.messagesContainer}
         renderItem={({ item }) => (
           <View style={styles.messageWrapper}>
             {item.role === 'user' ? (
@@ -268,7 +268,7 @@ export default function AskScreen() {
           </View>
         )}
         onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
-        style={styles.messagesList}
+        style={styles.messagesContainer}
       />
 
       <View style={styles.inputContainer}>
