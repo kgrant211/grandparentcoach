@@ -2,7 +2,7 @@ import Purchases from 'react-native-purchases';
 
 export async function initRevenueCat(apiKey: string, appUserId?: string) {
   Purchases.setLogLevel(Purchases.LOG_LEVEL.WARN);
-  await Purchases.configure({ apiKey, appUserId });
+  await Purchases.configure({ apiKey, appUserID: appUserId });
 }
 
 export async function getOfferings() {
