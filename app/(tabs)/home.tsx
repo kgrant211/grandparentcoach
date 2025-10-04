@@ -9,6 +9,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { loadSessions } from '../../lib/localSessions';
+import EmailConfirmationBanner from '../../components/EmailConfirmationBanner';
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -29,9 +30,14 @@ export default function HomeScreen() {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Grandparent Coach</Text>
+        <View style={styles.titleContainer}>
+          <Text style={styles.emoji}>👵</Text>
+          <Text style={styles.title}>Grandparent Coach</Text>
+        </View>
         <Text style={styles.subtitle}>Your gentle parenting guide</Text>
       </View>
+      
+      <EmailConfirmationBanner />
       
       <ScrollView 
         style={styles.content}
@@ -129,11 +135,19 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#e9ecef',
   },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 4,
+  },
+  emoji: {
+    fontSize: 28,
+  },
   title: {
     fontSize: 28,
     fontWeight: '700',
     color: '#333333',
-    marginBottom: 4,
   },
   subtitle: {
     fontSize: 16,
