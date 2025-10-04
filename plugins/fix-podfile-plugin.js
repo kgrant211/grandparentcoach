@@ -2,7 +2,7 @@ const { withDangerousMod } = require('@expo/config-plugins');
 const fs = require('fs');
 const path = require('path');
 
-const withFixedPodfile = (config) => {
+module.exports = function withFixedPodfile(config) {
   return withDangerousMod(config, [
     'ios',
     async (config) => {
@@ -25,6 +25,4 @@ const withFixedPodfile = (config) => {
     },
   ]);
 };
-
-module.exports = withFixedPodfile;
 
