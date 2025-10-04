@@ -10,6 +10,8 @@ interface AuthState {
   isPro: boolean;
   isLoading: boolean;
   error: string | null;
+  isEmailConfirmed: boolean;
+  needsEmailConfirmation: boolean;
 }
 
 interface AuthContextType extends AuthState {
@@ -18,6 +20,7 @@ interface AuthContextType extends AuthState {
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   refreshProStatus: () => Promise<void>;
+  resendConfirmationEmail: () => Promise<{ success: boolean; error?: string }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -41,6 +44,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     isPro: false,
     isLoading: true,
     error: null,
+    isEmailConfirmed: false,
+    needsEmailConfirmation: false,
   });
 
   const refreshProfile = async () => {
@@ -92,11 +97,36 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       const { data, error } = await signUpWithEmail(email, password);
       if (error) throw error;
 
+      // Check if email confirmation is required
+      const isConfirmed = data.user?.email_confirmed_at != null;
+      
       // Auth state will be updated by the onAuthStateChange listener
-      return { success: true };
+      return { 
+        success: true,
+        emailConfirmationRequired: !isConfirmed
+      };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Sign up failed';
       setState(prev => ({ ...prev, error: errorMessage, isLoading: false }));
+      return { success: false, error: errorMessage };
+    }
+  };
+
+  const resendConfirmationEmail = async () => {
+    try {
+      if (!state.user?.email) {
+        return { success: false, error: 'No email address found' };
+      }
+
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: state.user.email,
+      });
+
+      if (error) throw error;
+      return { success: true };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to resend email';
       return { success: false, error: errorMessage };
     }
   };
@@ -111,6 +141,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         isPro: false,
         isLoading: false,
         error: null,
+        isEmailConfirmed: false,
+        needsEmailConfirmation: false,
       });
     } catch (error) {
       console.error('Error signing out:', error);
@@ -131,7 +163,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         if (error) throw error;
 
         if (user && mounted) {
-          setState(prev => ({ ...prev, user, isLoading: false }));
+          // Check email confirmation status
+          const isConfirmed = user.email_confirmed_at != null;
+          const createdAt = new Date(user.created_at);
+          const daysSinceCreation = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
+          const needsConfirmation = !isConfirmed && daysSinceCreation > 30;
+          
+          setState(prev => ({ 
+            ...prev, 
+            user, 
+            isLoading: false,
+            isEmailConfirmed: isConfirmed,
+            needsEmailConfirmation: needsConfirmation,
+          }));
           
           // Load profile and pro status
           const { data: profile } = await getProfile(user.id);
@@ -167,7 +211,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       async (event, session) => {
         if (mounted) {
           if (session?.user) {
-            setState(prev => ({ ...prev, user: session.user }));
+            // Check email confirmation status
+            const isConfirmed = session.user.email_confirmed_at != null;
+            const createdAt = new Date(session.user.created_at);
+            const daysSinceCreation = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
+            const needsConfirmation = !isConfirmed && daysSinceCreation > 30;
+            
+            setState(prev => ({ 
+              ...prev, 
+              user: session.user,
+              isEmailConfirmed: isConfirmed,
+              needsEmailConfirmation: needsConfirmation,
+            }));
             
             // Initialize RevenueCat with user ID
             const key = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY;
@@ -188,6 +243,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               isPro: false,
               isLoading: false,
               error: null,
+              isEmailConfirmed: false,
+              needsEmailConfirmation: false,
             });
             
             // Re-initialize RevenueCat without user ID
@@ -217,6 +274,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     signOut: handleSignOut,
     refreshProfile,
     refreshProStatus,
+    resendConfirmationEmail,
   };
 
   return (

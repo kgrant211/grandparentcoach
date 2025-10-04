@@ -50,7 +50,15 @@ export default function LoginScreen() {
         : await signIn(email.trim().toLowerCase(), password);
       
       if (result.success) {
-        router.back();
+        if (isSignUp && result.emailConfirmationRequired) {
+          Alert.alert(
+            'Account Created!',
+            'You can start using the app now. We\'ve sent a confirmation email to ' + email + '. Please confirm your email within 30 days to keep your account active.',
+            [{ text: 'Got it!', onPress: () => router.back() }]
+          );
+        } else {
+          router.back();
+        }
       } else {
         Alert.alert(
           isSignUp ? 'Sign Up Failed' : 'Sign In Failed', 
