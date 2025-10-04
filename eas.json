@@ -6,22 +6,13 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal",
-      "ios": {
-        "postPrebuild": "./scripts/fix-podfile.sh"
-      }
+      "distribution": "internal"
     },
     "preview": {
-      "distribution": "internal",
-      "ios": {
-        "postPrebuild": "./scripts/fix-podfile.sh"
-      }
+      "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true,
-      "ios": {
-        "postPrebuild": "./scripts/fix-podfile.sh"
-      }
+      "autoIncrement": true
     }
   },
   "submit": {
