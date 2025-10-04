@@ -7,6 +7,8 @@ import {
   TextInput,
   FlatList,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -138,12 +140,16 @@ export default function AskScreen() {
     }
   };
 
-  // Seed tailored clarifying questions for popular topics on first render of the very first session only
+  // Seed tailored clarifying questions for popular topics - create new session when topic is provided
   React.useEffect(() => {
     if (!topic) return;
-    if (currentSessionId) return;
-    setMessages(prev => {
-      if (prev.length > 1) return prev;
+    
+    // Create a new session for this topic
+    (async () => {
+      const newSession = await createLocalSession(`New ${topic} conversation`);
+      setCurrentSessionId(newSession.id);
+      setSessionList(prev => [newSession, ...prev]);
+      
       const friendly = (t: string) => {
         switch (t) {
           case 'tantrums':
@@ -158,18 +164,30 @@ export default function AskScreen() {
             return undefined;
         }
       };
+      
       const prompt = friendly(topic);
-      if (!prompt) return prev;
-      const tailored = {
-        id: Date.now().toString(),
+      const greeting = {
+        id: 'greet-' + Date.now().toString(),
         role: 'assistant' as const,
-        content: prompt,
+        content: 'Hi! I\'m here to help you with your grandparenting questions. What\'s going on with your grandchild today?',
         timestamp: new Date().toLocaleTimeString(),
       };
-      return [...prev, tailored];
-    });
+      
+      const messages = prompt ? [
+        greeting,
+        {
+          id: Date.now().toString(),
+          role: 'assistant' as const,
+          content: prompt,
+          timestamp: new Date().toLocaleTimeString(),
+        }
+      ] : [greeting];
+      
+      setMessages(messages as any);
+      await saveLocalMessages(newSession.id, messages as any);
+    })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [topic, currentSessionId]);
+  }, [topic]);
 
   const renderMessage = ({ item }: { item: any }) => {
     if (item.role === 'user') {
@@ -199,7 +217,11 @@ export default function AskScreen() {
   }, [messages.length]);
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+    >
       <View style={styles.header}>
         <Text style={styles.title}>Ask Your Coach</Text>
         <TouchableOpacity onPress={() => setShowSwitcher(s => !s)} accessibilityLabel="Switch conversation" style={{position:'absolute', right:16, top:60}}>
@@ -288,7 +310,7 @@ export default function AskScreen() {
           <Text style={styles.sendButtonText}>Send</Text>
         </TouchableOpacity>
       </View>
-    </View>
+    </KeyboardAvoidingView>
   );
 }
 
