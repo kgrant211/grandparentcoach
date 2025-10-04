@@ -78,6 +78,7 @@ app.post('/coach', async (req, res) => {
     const ctxPrefix = [];
     if (context?.topic) ctxPrefix.push(`Topic: ${context.topic}`);
     if (context?.ageRange) ctxPrefix.push(`Age range: ${context.ageRange}`);
+    if (context?.conversationHistory) ctxPrefix.push(`\nPrevious conversation context:\n${context.conversationHistory}`);
     const sys = ctxPrefix.length ? `${systemPrompt}\n\nContext:\n${ctxPrefix.join('\n')}` : systemPrompt;
 
     const body = {

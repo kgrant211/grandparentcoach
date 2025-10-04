@@ -120,8 +120,25 @@ export default function AskScreen() {
     }
 
     try {
+      // Gather context from all previous sessions for conversation continuity
+      const allSessions = await loadLocalSessions();
+      const conversationHistory: string[] = [];
+      
+      // Get summaries from the 5 most recent sessions (excluding current one)
+      const recentSessions = allSessions.filter(s => s.id !== sessionId).slice(0, 5);
+      for (const session of recentSessions) {
+        const sessionMsgs = await loadLocalMessages(session.id);
+        if (sessionMsgs.length > 0) {
+          const summary = `Previous conversation "${session.title}": ${sessionMsgs.slice(0, 4).map(m => `${m.role}: ${m.content.slice(0, 100)}`).join(' | ')}`;
+          conversationHistory.push(summary);
+        }
+      }
+
       const { content: coach } = await askCoachAPI({
-        context: { topic },
+        context: { 
+          topic,
+          conversationHistory: conversationHistory.length > 0 ? conversationHistory.join('\n---\n') : undefined 
+        },
         messages: nextLocal.map(m => ({ role: m.role as 'user' | 'assistant', content: m.content })),
       });
       const coachResponse = {
@@ -223,7 +240,10 @@ export default function AskScreen() {
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
     >
       <View style={styles.header}>
-        <Text style={styles.title}>Ask Your Coach</Text>
+        <TouchableOpacity onPress={() => router.push('/(tabs)/home')} style={styles.titleContainer} accessibilityLabel="Go to home">
+          <Text style={styles.emoji}>👵</Text>
+          <Text style={styles.title}>Grandparent Coach</Text>
+        </TouchableOpacity>
         <TouchableOpacity onPress={() => setShowSwitcher(s => !s)} accessibilityLabel="Switch conversation" style={{position:'absolute', right:16, top:60}}>
           <Ionicons name="swap-horizontal" size={22} color="#007AFF" />
         </TouchableOpacity>
@@ -340,6 +360,14 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
     borderBottomWidth: 1,
     borderBottomColor: '#e9ecef',
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  emoji: {
+    fontSize: 24,
   },
   title: {
     fontSize: 24,

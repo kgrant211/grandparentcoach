@@ -9,6 +9,8 @@ function RootNavigator() {
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="login" options={{ presentation: 'modal' }} />
       <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="privacy" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="terms" options={{ presentation: 'modal' }} />
     </Stack>
   );
 }
