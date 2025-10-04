@@ -208,14 +208,14 @@ export default function SettingsScreen() {
             icon="document-text"
             title="Privacy Policy"
             subtitle="How we protect your data"
-            onPress={() => Alert.alert('Privacy Policy', 'Privacy policy will be available soon!')}
+            onPress={() => router.push('/privacy')}
           />
 
           <SettingItem
             icon="shield-checkmark"
             title="Terms of Service"
             subtitle="App usage terms and conditions"
-            onPress={() => Alert.alert('Terms of Service', 'Terms of service will be available soon!')}
+            onPress={() => router.push('/terms')}
           />
 
           <SettingItem
