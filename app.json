@@ -39,7 +39,8 @@
           }
         }
       ],
-      "./plugins/fix-podfile-plugin.js"
+      "./plugins/fix-podfile-plugin.js",
+      "expo-secure-store"
     ],
     "extra": {
       "router": {
