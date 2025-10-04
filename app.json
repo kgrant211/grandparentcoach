@@ -38,7 +38,8 @@
             "kotlinVersion": "1.9.24"
           }
         }
-      ]
+      ],
+      "./plugins/fix-podfile-plugin.js"
     ],
     "extra": {
       "router": {
