@@ -16,7 +16,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.grandparentcoach.app",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSPhotoLibraryUsageDescription": "This app does not access your photo library. This permission is required by an underlying library.",
+        "NSSpeechRecognitionUsageDescription": "This app uses speech recognition to convert your voice into text so you can communicate with your AI grandparenting coach hands-free."
       }
     },
     "android": {
