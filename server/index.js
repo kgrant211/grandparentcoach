@@ -15,7 +15,10 @@ const ALLOW_ORIGINS = (process.env.ALLOW_ORIGINS || [
 
 app.use((req, res, next) => {
   const origin = req.headers.origin;
-  if (origin && ALLOW_ORIGINS.includes(origin)) {
+  // In production (Vercel), allow all origins for mobile apps
+  if (process.env.VERCEL) {
+    res.header('Access-Control-Allow-Origin', '*');
+  } else if (origin && ALLOW_ORIGINS.includes(origin)) {
     res.header('Access-Control-Allow-Origin', origin);
   } else {
     res.header('Access-Control-Allow-Origin', '*');
@@ -151,10 +154,16 @@ app.post('/summarize', async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Coach proxy listening on http://localhost:${PORT}`);
-  if (OPENAI_ORG) console.log(`Using OpenAI Organization: ${OPENAI_ORG}`);
-  if (OPENAI_PROJECT) console.log(`Using OpenAI Project: ${OPENAI_PROJECT}`);
-});
+// Only start the server if running locally (not on Vercel)
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`Coach proxy listening on http://localhost:${PORT}`);
+    if (OPENAI_ORG) console.log(`Using OpenAI Organization: ${OPENAI_ORG}`);
+    if (OPENAI_PROJECT) console.log(`Using OpenAI Project: ${OPENAI_PROJECT}`);
+  });
+}
+
+// Export for Vercel serverless functions
+module.exports = app;
 
 
