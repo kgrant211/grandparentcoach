@@ -60,12 +60,18 @@ export interface Favorite {
 }
 
 // Auth helpers
-export const signInWithEmail = async (email: string) => {
-  const { data, error } = await supabase.auth.signInWithOtp({
+export const signInWithEmail = async (email: string, password: string) => {
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
-    options: {
-      emailRedirectTo: 'grandparentcoach://auth/callback',
-    },
+    password,
+  });
+  return { data, error };
+};
+
+export const signUpWithEmail = async (email: string, password: string) => {
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
   });
   return { data, error };
 };

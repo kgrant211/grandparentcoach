@@ -16,34 +16,46 @@ import { Ionicons } from '@expo/vector-icons';
 
 export default function LoginScreen() {
   const router = useRouter();
-  const { signIn } = useAuth();
+  const { signIn, signUp } = useAuth();
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSignIn = async () => {
+  const handleSubmit = async () => {
     if (!email.trim()) {
       Alert.alert('Email Required', 'Please enter your email address.');
       return;
     }
 
-    // Basic email validation
     if (!email.includes('@')) {
       Alert.alert('Invalid Email', 'Please enter a valid email address.');
       return;
     }
 
+    if (!password.trim()) {
+      Alert.alert('Password Required', 'Please enter your password.');
+      return;
+    }
+
+    if (isSignUp && password.length < 6) {
+      Alert.alert('Password Too Short', 'Password must be at least 6 characters.');
+      return;
+    }
+
     setLoading(true);
     try {
-      const result = await signIn(email.trim().toLowerCase());
+      const result = isSignUp 
+        ? await signUp(email.trim().toLowerCase(), password)
+        : await signIn(email.trim().toLowerCase(), password);
       
       if (result.success) {
-        Alert.alert(
-          'Check Your Email',
-          'We sent you a magic link! Click the link in your email to sign in.',
-          [{ text: 'OK', onPress: () => router.back() }]
-        );
+        router.back();
       } else {
-        Alert.alert('Sign In Failed', result.error || 'Please try again.');
+        Alert.alert(
+          isSignUp ? 'Sign Up Failed' : 'Sign In Failed', 
+          result.error || 'Please try again.'
+        );
       }
     } catch (error) {
       Alert.alert('Error', 'Something went wrong. Please try again.');
@@ -71,16 +83,18 @@ export default function LoginScreen() {
           <Ionicons name="person-circle" size={80} color="#007AFF" />
         </View>
 
-        <Text style={styles.title}>Sign In</Text>
+        <Text style={styles.title}>{isSignUp ? 'Create Account' : 'Sign In'}</Text>
         <Text style={styles.subtitle}>
-          We'll send you a magic link to sign in - no password needed!
+          {isSignUp 
+            ? 'Enter your email and create a password to get started' 
+            : 'Enter your email and password to continue'}
         </Text>
 
         <View style={styles.inputContainer}>
           <Ionicons name="mail" size={20} color="#666" style={styles.inputIcon} />
           <TextInput
             style={styles.input}
-            placeholder="your@email.com"
+            placeholder="Email address"
             placeholderTextColor="#999"
             value={email}
             onChangeText={setEmail}
@@ -91,20 +105,49 @@ export default function LoginScreen() {
           />
         </View>
 
+        <View style={styles.inputContainer}>
+          <Ionicons name="lock-closed" size={20} color="#666" style={styles.inputIcon} />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            placeholderTextColor="#999"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            autoCapitalize="none"
+            autoCorrect={false}
+            editable={!loading}
+          />
+        </View>
+
         <TouchableOpacity
           style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleSignIn}
+          onPress={handleSubmit}
           disabled={loading}
         >
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.buttonText}>Send Magic Link</Text>
+            <Text style={styles.buttonText}>
+              {isSignUp ? 'Create Account' : 'Sign In'}
+            </Text>
           )}
         </TouchableOpacity>
 
+        <TouchableOpacity
+          style={styles.switchButton}
+          onPress={() => setIsSignUp(!isSignUp)}
+          disabled={loading}
+        >
+          <Text style={styles.switchText}>
+            {isSignUp 
+              ? 'Already have an account? Sign in' 
+              : "Don't have an account? Sign up"}
+          </Text>
+        </TouchableOpacity>
+
         <Text style={styles.privacy}>
-          By signing in, you agree to our Terms of Service and Privacy Policy.
+          By continuing, you agree to our Terms of Service and Privacy Policy.
         </Text>
       </View>
     </KeyboardAvoidingView>
@@ -185,6 +228,16 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 17,
     fontWeight: '600',
+  },
+  switchButton: {
+    paddingVertical: 12,
+    marginBottom: 16,
+  },
+  switchText: {
+    fontSize: 15,
+    color: '#007AFF',
+    textAlign: 'center',
+    fontWeight: '500',
   },
   privacy: {
     fontSize: 12,

@@ -1,12 +1,43 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Platform, Alert } from 'react-native';
 import { purchaseMonthly, restore, isPro } from '../lib/revenuecat';
 import { useRouter } from 'expo-router';
+import { useAuth } from '../state/useAuth';
 
 export default function PaywallScreen() {
   const router = useRouter();
+  const { user, isLoading } = useAuth();
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isLoading && !user) {
+      Alert.alert(
+        'Sign In Required',
+        'Please sign in to subscribe to Pro features.',
+        [
+          {
+            text: 'Sign In',
+            onPress: () => {
+              router.replace('/login');
+            }
+          },
+          {
+            text: 'Cancel',
+            style: 'cancel',
+            onPress: () => router.back()
+          }
+        ]
+      );
+    }
+  }, [user, isLoading, router]);
 
   const handleUpgrade = async () => {
+    if (!user) {
+      Alert.alert('Sign In Required', 'Please sign in first to purchase a subscription.');
+      router.push('/login');
+      return;
+    }
+
     try {
       await purchaseMonthly();
       const pro = await isPro();
@@ -22,6 +53,12 @@ export default function PaywallScreen() {
   };
 
   const handleRestore = async () => {
+    if (!user) {
+      Alert.alert('Sign In Required', 'Please sign in first to restore purchases.');
+      router.push('/login');
+      return;
+    }
+
     try {
       await restore();
       const pro = await isPro();

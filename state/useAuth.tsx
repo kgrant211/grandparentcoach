@@ -1,6 +1,6 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
 import { Platform } from 'react-native';
-import { supabase, getCurrentUser, signInWithEmail, signOut, getProfile } from '../lib/supabase';
+import { supabase, getCurrentUser, signInWithEmail, signUpWithEmail, signOut, getProfile } from '../lib/supabase';
 import { isPro, initRevenueCat } from '../lib/revenuecat';
 import type { Profile } from '../lib/supabase';
 
@@ -13,7 +13,8 @@ interface AuthState {
 }
 
 interface AuthContextType extends AuthState {
-  signIn: (email: string) => Promise<{ success: boolean; error?: string }>;
+  signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  signUp: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   refreshProStatus: () => Promise<void>;
@@ -68,16 +69,33 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const signIn = async (email: string) => {
+  const signIn = async (email: string, password: string) => {
     try {
       setState(prev => ({ ...prev, isLoading: true, error: null }));
       
-      const { data, error } = await signInWithEmail(email);
+      const { data, error } = await signInWithEmail(email, password);
       if (error) throw error;
 
+      // Auth state will be updated by the onAuthStateChange listener
       return { success: true };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Sign in failed';
+      setState(prev => ({ ...prev, error: errorMessage, isLoading: false }));
+      return { success: false, error: errorMessage };
+    }
+  };
+
+  const signUp = async (email: string, password: string) => {
+    try {
+      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      
+      const { data, error } = await signUpWithEmail(email, password);
+      if (error) throw error;
+
+      // Auth state will be updated by the onAuthStateChange listener
+      return { success: true };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Sign up failed';
       setState(prev => ({ ...prev, error: errorMessage, isLoading: false }));
       return { success: false, error: errorMessage };
     }
@@ -195,6 +213,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const value: AuthContextType = {
     ...state,
     signIn,
+    signUp,
     signOut: handleSignOut,
     refreshProfile,
     refreshProStatus,
