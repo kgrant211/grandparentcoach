@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from 'react';
+import { Platform } from 'react-native';
 import { supabase, getCurrentUser, signInWithEmail, signOut, getProfile } from '../lib/supabase';
-import { isPro } from '../lib/revenuecat';
+import { isPro, initRevenueCat } from '../lib/revenuecat';
 import type { Profile } from '../lib/supabase';
 
 interface AuthState {
@@ -149,6 +150,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         if (mounted) {
           if (session?.user) {
             setState(prev => ({ ...prev, user: session.user }));
+            
+            // Initialize RevenueCat with user ID
+            const key = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY;
+            if (key && Platform.OS !== 'web') {
+              try {
+                await initRevenueCat(key, session.user.id);
+              } catch (error) {
+                console.error('Error initializing RevenueCat:', error);
+              }
+            }
+            
             await refreshProfile();
             await refreshProStatus();
           } else {
@@ -159,6 +171,16 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
               isLoading: false,
               error: null,
             });
+            
+            // Re-initialize RevenueCat without user ID
+            const key = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY;
+            if (key && Platform.OS !== 'web') {
+              try {
+                await initRevenueCat(key);
+              } catch (error) {
+                console.error('Error initializing RevenueCat:', error);
+              }
+            }
           }
         }
       }

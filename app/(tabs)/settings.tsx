@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,15 +8,34 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { purchaseMonthly, restore, isPro } from '../../lib/revenuecat';
+import { useAuth } from '../../state/useAuth';
 
 export default function SettingsScreen() {
+  const router = useRouter();
+  const { user, profile, isPro: isProStatus, signOut: handleSignOut } = useAuth();
+  const [proStatus, setProStatus] = useState(false);
+
+  useEffect(() => {
+    checkProStatus();
+  }, [isProStatus]);
+
+  const checkProStatus = async () => {
+    const status = await isPro();
+    setProStatus(status);
+  };
+
   const handleUpgrade = async () => {
     try {
       const result = await purchaseMonthly();
       const pro = await isPro();
-      if (pro) Alert.alert('Success', 'You now have Pro!');
-      else Alert.alert('Purchase', 'Purchase completed. Entitlement pending.');
+      if (pro) {
+        setProStatus(true);
+        Alert.alert('Success', 'You now have Pro!');
+      } else {
+        Alert.alert('Purchase', 'Purchase completed. Entitlement pending.');
+      }
     } catch (e: any) {
       Alert.alert('Purchase failed', e?.message || 'Please try again later.');
     }
@@ -110,21 +129,49 @@ export default function SettingsScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account</Text>
 
-          <SettingItem
-            icon="person"
-            title="Guest User"
-            subtitle="Not signed in"
-            onPress={() => {
-              Alert.alert('Sign In', 'Sign-in will be available soon.');
-            }}
-          />
+          {user ? (
+            <>
+              <SettingItem
+                icon="person"
+                title={profile?.email || user.email || 'Signed In'}
+                subtitle={proStatus ? 'Pro Member' : 'Free Account'}
+                onPress={() => {}}
+                showArrow={false}
+              />
+              
+              <SettingItem
+                icon="log-out"
+                title="Sign Out"
+                subtitle="Sign out of your account"
+                onPress={() => {
+                  Alert.alert(
+                    'Sign Out',
+                    'Are you sure you want to sign out?',
+                    [
+                      { text: 'Cancel', style: 'cancel' },
+                      { text: 'Sign Out', style: 'destructive', onPress: handleSignOut }
+                    ]
+                  );
+                }}
+              />
+            </>
+          ) : (
+            <SettingItem
+              icon="person-add"
+              title="Sign In"
+              subtitle="Save your progress and access Pro features"
+              onPress={() => router.push('/login')}
+            />
+          )}
 
-          <SettingItem
-            icon="star-outline"
-            title="Upgrade to Pro"
-            subtitle="Unlock all features"
-            onPress={handleUpgrade}
-          />
+          {!proStatus && (
+            <SettingItem
+              icon="star-outline"
+              title="Upgrade to Pro"
+              subtitle="Unlock unlimited sessions and premium features"
+              onPress={handleUpgrade}
+            />
+          )}
 
           <SettingItem
             icon="refresh"

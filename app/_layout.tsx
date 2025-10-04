@@ -1,21 +1,22 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Stack } from 'expo-router';
-import { Platform } from 'react-native';
-import { initRevenueCat } from '../lib/revenuecat';
+import { AuthProvider } from '../state/useAuth';
 
-export default function RootLayout() {
-  useEffect(() => {
-    const key = process.env.EXPO_PUBLIC_REVENUECAT_API_KEY;
-    if (key && Platform.OS !== 'web') {
-      initRevenueCat(key).catch(() => {
-        // ignore init errors on unsupported/envs
-      });
-    }
-  }, []);
+function RootNavigator() {
   return (
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="login" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="paywall" options={{ presentation: 'modal' }} />
     </Stack>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <AuthProvider>
+      <RootNavigator />
+    </AuthProvider>
   );
 }
