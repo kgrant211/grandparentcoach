@@ -10,12 +10,14 @@ import {
   Platform,
   ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { useAuth } from '../state/useAuth';
 import { Ionicons } from '@expo/vector-icons';
 
 export default function LoginScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams();
+  const returnTo = typeof params.returnTo === 'string' ? params.returnTo : undefined;
   const { signIn, signUp } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -50,14 +52,25 @@ export default function LoginScreen() {
         : await signIn(email.trim().toLowerCase(), password);
       
       if (result.success) {
+        // Small delay to ensure auth state is updated
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        const navigateToDestination = () => {
+          if (returnTo) {
+            router.replace(returnTo as any);
+          } else {
+            router.back();
+          }
+        };
+
         if (isSignUp && result.emailConfirmationRequired) {
           Alert.alert(
             'Account Created!',
             'You can start using the app now. We\'ve sent a confirmation email to ' + email + '. Please confirm your email within 30 days to keep your account active.',
-            [{ text: 'Got it!', onPress: () => router.back() }]
+            [{ text: 'Got it!', onPress: navigateToDestination }]
           );
         } else {
-          router.back();
+          navigateToDestination();
         }
       } else {
         Alert.alert(

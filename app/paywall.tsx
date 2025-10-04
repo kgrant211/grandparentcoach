@@ -18,7 +18,7 @@ export default function PaywallScreen() {
           {
             text: 'Sign In',
             onPress: () => {
-              router.replace('/login');
+              router.replace('/login?returnTo=/paywall');
             }
           },
           {
@@ -34,7 +34,7 @@ export default function PaywallScreen() {
   const handleUpgrade = async () => {
     if (!user) {
       Alert.alert('Sign In Required', 'Please sign in first to purchase a subscription.');
-      router.push('/login');
+      router.push('/login?returnTo=/paywall');
       return;
     }
 
@@ -55,7 +55,7 @@ export default function PaywallScreen() {
   const handleRestore = async () => {
     if (!user) {
       Alert.alert('Sign In Required', 'Please sign in first to restore purchases.');
-      router.push('/login');
+      router.push('/login?returnTo=/paywall');
       return;
     }
 

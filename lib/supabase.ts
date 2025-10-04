@@ -72,6 +72,10 @@ export const signUpWithEmail = async (email: string, password: string) => {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
+    options: {
+      // This allows users to sign in immediately without email confirmation
+      emailRedirectTo: undefined,
+    },
   });
   return { data, error };
 };
